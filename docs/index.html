@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Internship Finder</title>
+<meta name="theme-color" content="#0f1720">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #16181d; --muted: #646a75; --line: #e3e1da;
+    --accent: #c2410c; --accentSoft: #fff1e8; --good: #15803d; --goodSoft: #e9f7ee;
+    --warn: #a16207; --warnSoft: #fdf6dc; --bad: #b91c1c; --badSoft: #fdecec; --info: #1d4ed8; --infoSoft: #e9efff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1720; --card: #17212c; --ink: #e8eaed; --muted: #9aa4b1; --line: #26313e;
+      --accent: #fb923c; --accentSoft: #2c1d12; --good: #4ade80; --goodSoft: #12291b;
+      --warn: #facc15; --warnSoft: #2a2410; --bad: #f87171; --badSoft: #2e1515; --info: #93b4ff; --infoSoft: #16213a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 16px 8px; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .tabs { display: flex; gap: 6px; margin-top: 12px; }
+  .tab { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 14px; font-size: 14px; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  main { max-width: 900px; margin: 0 auto; padding: 0 16px 40px; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+  .filters input, .filters select { width: 100%; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 15px; }
+  .filters .wide { grid-column: 1 / -1; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .chip { border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+  .chip[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accentSoft); }
+  .count { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+  .job { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+  .job.closed { opacity: .55; }
+  .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .title { font-weight: 600; font-size: 16px; color: var(--ink); text-decoration: none; }
+  .title:hover { text-decoration: underline; }
+  .score { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; border-radius: 8px; padding: 2px 8px; background: var(--infoSoft); color: var(--info); }
+  .score.hi { background: var(--goodSoft); color: var(--good); }
+  .score.lo { background: var(--line); color: var(--muted); }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .b { font-size: 12px; border-radius: 6px; padding: 2px 7px; border: 0; cursor: default; }
+  .b.new { background: var(--accent); color: #fff; font-weight: 700; }
+  .b.jr { background: var(--warnSoft); color: var(--warn); cursor: pointer; }
+  .b.us { background: var(--infoSoft); color: var(--info); cursor: pointer; }
+  .b.clr { background: var(--badSoft); color: var(--bad); cursor: pointer; }
+  .b.soph { background: var(--goodSoft); color: var(--good); cursor: pointer; }
+  .b.muted { background: var(--line); color: var(--muted); }
+  .evidence { display: none; margin-top: 8px; font-size: 13px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 8px; }
+  .evidence.show { display: block; }
+  .why { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .st { font-weight: 600; }
+  .st.ok { color: var(--good); } .st.blocked { color: var(--bad); } .st.error { color: var(--bad); } .st.zero { color: var(--warn); }
+  .err { color: var(--muted); font-size: 12px; word-break: break-word; }
+  .empty { color: var(--muted); padding: 30px 0; text-align: center; }
+  .tablewrap { overflow-x: auto; }
+  @media (min-width: 700px) { .filters { grid-template-columns: 2fr 1fr 1fr 1fr; } .filters .wide { grid-column: auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Internship Finder</h1>
+  <div class="sub" id="sub">loading…</div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="jobs">Postings</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="status">Boards</button>
+  </div>
+</header>
+<main>
+  <section id="jobsView">
+    <div class="filters">
+      <input id="q" class="wide" type="search" placeholder="Search title, company, location">
+      <select id="company"><option value="">All companies</option></select>
+      <select id="sector"><option value="">All sectors</option></select>
+      <input id="loc" type="search" placeholder="Location">
+    </div>
+    <div class="toggles">
+      <button class="chip" id="newToday" aria-pressed="false">New today</button>
+      <button class="chip" id="eligibleOnly" aria-pressed="false">Hide rising-junior min</button>
+      <button class="chip" id="termOnly" aria-pressed="false">Summer 2027 stated</button>
+      <button class="chip" id="showClosed" aria-pressed="false">Show closed</button>
+      <button class="chip" id="sortNew" aria-pressed="false">Newest first</button>
+    </div>
+    <div class="count" id="count"></div>
+    <div id="list"></div>
+  </section>
+  <section id="statusView" hidden>
+    <div class="count" id="statusCount"></div>
+    <div class="tablewrap"><table><thead><tr><th>Company</th><th>Board</th><th>Status</th><th>Intern titles</th><th>Matches</th><th>Last ok</th></tr></thead><tbody id="statusBody"></tbody></table></div>
+  </section>
+</main>
+<script>
+const dataUrl = "https://raw.githubusercontent.com/db165/internship-finder/snapshot/jobs.json";
+const $ = id => document.getElementById(id);
+let snap = { jobs: [], companies: [] };
+const prefsKey = "internshipFinderPrefs";
+const toggles = ["newToday", "eligibleOnly", "termOnly", "showClosed", "sortNew"];
+
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function ago(iso) {
+  if (!iso) return "";
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 60) return m + "m ago";
+  if (m < 48 * 60) return Math.round(m / 60) + "h ago";
+  return Math.round(m / 1440) + "d ago";
+}
+function stamp(iso) { return iso ? new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""; }
+function isToday(iso) { const d = new Date(iso), n = new Date(); return d.toDateString() === n.toDateString(); }
+function flagSet(j) { return new Set((j.flags || []).map(f => f.flag)); }
+
+function loadPrefs() {
+  try { const p = JSON.parse(localStorage.getItem(prefsKey) || "{}"); toggles.forEach(t => setPressed(t, !!p[t])); } catch (e) {}
+}
+function savePrefs() {
+  try { const p = {}; toggles.forEach(t => p[t] = pressed(t)); localStorage.setItem(prefsKey, JSON.stringify(p)); } catch (e) {}
+}
+function pressed(id) { return $(id).getAttribute("aria-pressed") === "true"; }
+function setPressed(id, v) { $(id).setAttribute("aria-pressed", v ? "true" : "false"); }
+
+function fillSelect(sel, values) {
+  const cur = sel.value;
+  sel.length = 1;
+  values.forEach(v => sel.add(new Option(v, v)));
+  sel.value = values.includes(cur) ? cur : "";
+}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase(), comp = $("company").value, sec = $("sector").value, loc = $("loc").value.trim().toLowerCase();
+  let jobs = snap.jobs.filter(j => {
+    if (!pressed("showClosed") && j.closedAt) return false;
+    if (comp && j.company !== comp) return false;
+    if (sec && j.sector !== sec) return false;
+    if (loc && !(j.location || "").toLowerCase().includes(loc)) return false;
+    if (q && !(j.title + " " + j.company + " " + j.location).toLowerCase().includes(q)) return false;
+    if (pressed("newToday") && !isToday(j.firstSeen)) return false;
+    if (pressed("eligibleOnly") && flagSet(j).has("risingJuniorMin")) return false;
+    if (pressed("termOnly") && j.term !== "match") return false;
+    return true;
+  });
+  if (pressed("sortNew")) jobs = jobs.slice().sort((a, b) => b.firstSeen.localeCompare(a.firstSeen));
+  $("count").textContent = `${jobs.length} posting${jobs.length === 1 ? "" : "s"}`;
+  $("list").innerHTML = jobs.length ? jobs.map(card).join("") : `<div class="empty">Nothing matches these filters yet.</div>`;
+}
+
+function card(j) {
+  const f = flagSet(j), ev = {};
+  (j.flags || []).forEach(x => ev[x.flag] = x.evidence);
+  const badges = [];
+  if (isToday(j.firstSeen)) badges.push(`<span class="b new">NEW</span>`);
+  if (f.has("risingJuniorMin")) badges.push(`<button class="b jr" data-ev="${esc(ev.risingJuniorMin)}">Rising-junior min</button>`);
+  if (f.has("sophomoreFriendly")) badges.push(`<button class="b soph" data-ev="${esc(ev.sophomoreFriendly)}">Mentions sophomores</button>`);
+  if (f.has("usPerson")) badges.push(`<button class="b us" data-ev="${esc(ev.usPerson)}">US person</button>`);
+  if (f.has("clearance")) badges.push(`<button class="b clr" data-ev="${esc(ev.clearance)}">Clearance</button>`);
+  if (j.term === "unspecified") badges.push(`<span class="b muted">Term not stated</span>`);
+  if (j.detailPending) badges.push(`<span class="b muted">Details pending</span>`);
+  if (j.closedAt) badges.push(`<span class="b muted">Closed ${ago(j.closedAt)}</span>`);
+  const cls = j.score >= 75 ? "hi" : j.score < 40 ? "lo" : "";
+  return `<article class="job${j.closedAt ? " closed" : ""}">
+    <div class="top"><a class="title" href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.title)}</a><span class="score ${cls}">${j.score ?? ""}</span></div>
+    <div class="meta"><b>${esc(j.company)}</b> · ${esc(j.sector)} · ${esc(j.location || "location n/a")}</div>
+    <div class="meta">First seen ${ago(j.firstSeen)} (${stamp(j.firstSeen)})${j.postedAt ? " · posted " + esc(String(j.postedAt).slice(0, 10)) : ""}</div>
+    <div class="badges">${badges.join("")}</div>
+    <div class="evidence"></div>
+    ${(j.why || []).length ? `<div class="why">${esc(j.why.join(" · "))}</div>` : ""}
+  </article>`;
+}
+
+function renderStatus() {
+  const order = { error: 0, blocked: 1, "0 jobs": 2, pending: 3, ok: 4 };
+  const rows = snap.companies.slice().sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9) || a.name.localeCompare(b.name));
+  const tally = {};
+  rows.forEach(r => tally[r.status] = (tally[r.status] || 0) + 1);
+  $("statusCount").textContent = Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(" · ");
+  $("statusBody").innerHTML = rows.map(r => {
+    const cls = r.status === "ok" ? "ok" : r.status === "0 jobs" ? "zero" : r.status;
+    return `<tr><td>${esc(r.name)}<div class="err">${esc(r.sector)}</div></td><td>${esc(r.ats)}</td>
+      <td><span class="st ${esc(cls)}">${esc(r.status)}</span>${r.error ? `<div class="err">${esc(r.error)}</div>` : ""}</td>
+      <td>${r.internTitles ?? 0}</td><td>${r.matches ?? 0}</td><td>${r.lastOk ? ago(r.lastOk) : "never"}</td></tr>`;
+  }).join("");
+}
+
+async function load() {
+  try {
+    const r = await fetch(dataUrl + "?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    snap = await r.json();
+  } catch (e) {
+    $("sub").textContent = "No snapshot yet. It appears after the Raspberry Pi's first run.";
+    return;
+  }
+  const open = snap.jobs.filter(j => !j.closedAt);
+  const today = open.filter(j => isToday(j.firstSeen)).length;
+  const blocked = snap.companies.filter(c => c.status === "blocked" || c.status === "error").length;
+  $("sub").textContent = `${open.length} open · ${today} new today · ${snap.companies.length} boards${blocked ? ` (${blocked} blocked/erroring)` : ""} · updated ${ago(snap.generatedAt)}`;
+  fillSelect($("company"), [...new Set(snap.jobs.map(j => j.company))].sort());
+  fillSelect($("sector"), [...new Set(snap.jobs.map(j => j.sector))].filter(Boolean).sort());
+  render();
+  renderStatus();
+}
+
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t ? "true" : "false"));
+  $("jobsView").hidden = t.dataset.tab !== "jobs";
+  $("statusView").hidden = t.dataset.tab !== "status";
+});
+toggles.forEach(id => $(id).onclick = () => { setPressed(id, !pressed(id)); savePrefs(); render(); });
+["q", "company", "sector", "loc"].forEach(id => $(id).addEventListener("input", render));
+$("list").addEventListener("click", e => {
+  const b = e.target.closest("button[data-ev]");
+  if (!b) return;
+  const box = b.closest(".job").querySelector(".evidence");
+  const same = box.classList.contains("show") && box.textContent === b.dataset.ev;
+  box.textContent = b.dataset.ev;
+  box.classList.toggle("show", !same);
+});
+loadPrefs();
+load();
+setInterval(load, 5 * 60 * 1000);
+</script>
+</body>
+</html>
