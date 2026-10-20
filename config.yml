@@ -1,0 +1,201 @@
+## internship finder settings (edit freely, the pi pulls changes every run)
+
+## what counts as a match
+search:
+  term: {season: summer, year: 2027}
+  # sectors or companies here get a small ranking boost (notable or exciting)
+  bigCities: [chicago, houston, austin, dallas, fort worth, plano, seattle, redmond, kent, bellevue,
+              los angeles, hawthorne, el segundo, long beach, torrance, irvine, san diego,
+              san francisco, bay area, san jose, sunnyvale, mountain view, palo alto, fremont, oakland,
+              boston, cambridge, new york, brooklyn, denver, boulder, atlanta, washington, arlington,
+              phoenix, minneapolis, detroit, pittsburgh, philadelphia, miami, orlando]
+
+## alerts (ntfy topic lives in ~/.config/internship-finder/env on the pi, never in this repo)
+alerts:
+  maxPerRun: 5        # more new matches than this in one run get batched into one summary ping
+  minScore: 30        # matches scoring below this show on the dashboard but don't ping
+  dashboardUrl: https://db165.github.io/internship-finder/
+
+## crawling manners
+schedule:
+  runEveryMinutes: 15   # the pi timer
+  defaultEveryRuns: 2   # most companies are checked every 2nd run (~30 min), staggered by name
+  priorityEveryRuns: 1  # companies marked priority: true are checked every run (~15 min)
+http:
+  perHostDelaySeconds: 1.5
+  timeoutSeconds: 25
+  workers: 4
+  maxDetailFetchesPerRun: 80   # full descriptions are fetched once per new posting, then cached
+workday:
+  maxPages: 8             # 20 postings per page
+  keywordPages: 2         # extra keyword pass in case a posting isn't tagged as an intern
+  queries: [internship, co-op]
+dropClosedAfterDays: 14
+
+## companies
+# ats types and the fields each needs:
+#   greenhouse: token          lever: token          ashby: token
+#   workday: host, sites       successfactors: host (rss feed, keywords optional)
+#   eightfold: host, domain    oracle: host, site    smartrecruiters: token
+#   amazon / ibm: no fields
+# tier 1 = notable or exciting (ranks higher anywhere), priority = checked every run
+companies:
+  # user targets
+  - {name: SpaceX, sector: space, tier: 1, priority: true, ats: greenhouse, token: spacex}
+  - {name: Blue Origin, sector: space, tier: 1, priority: true, ats: workday, host: blueorigin.wd5.myworkdayjobs.com, sites: [BlueOrigin]}
+  - {name: United Launch Alliance, sector: space, tier: 1, priority: true, ats: successfactors, host: jobs.ulalaunch.com}
+  - {name: Anduril, sector: defense tech, tier: 1, priority: true, ats: greenhouse, token: andurilindustries}
+  - {name: Boeing, sector: aerospace, tier: 1, priority: true, ats: workday, host: boeing.wd1.myworkdayjobs.com, sites: [INTERN, EXTERNAL_CAREERS]}
+  - {name: Lockheed Martin, sector: defense, tier: 1, priority: true, ats: eightfold, host: lockheedmartin.eightfold.ai, domain: lockheedmartin.com}
+  - {name: RTX, sector: defense, tier: 1, priority: true, ats: workday, host: globalhr.wd5.myworkdayjobs.com, sites: [REC_RTX_Ext_Gateway]}
+  - {name: GE Aerospace, sector: aerospace, tier: 1, priority: true, ats: workday, host: geaerospace.wd5.myworkdayjobs.com, sites: [GE_ExternalSite]}
+  - {name: GE Vernova, sector: energy, tier: 1, priority: true, ats: workday, host: gevernova.wd5.myworkdayjobs.com, sites: [Vernova_ExternalSite]}
+  - {name: Caterpillar, sector: industrial, tier: 1, priority: true, ats: workday, host: cat.wd5.myworkdayjobs.com, sites: [CaterpillarCareers]}
+  - {name: Stryker, sector: medical devices, tier: 1, priority: true, ats: workday, host: stryker.wd1.myworkdayjobs.com, sites: [StrykerCareers]}
+  - {name: Amazon, sector: big tech, tier: 1, priority: true, ats: amazon}
+  - {name: IBM, sector: big tech, tier: 1, priority: true, ats: ibm}
+
+  # aerospace and defense
+  - {name: Northrop Grumman, sector: defense, tier: 1, ats: workday, host: ngc.wd1.myworkdayjobs.com, sites: [Northrop_Grumman_External_Site]}
+  - {name: Honeywell, sector: aerospace, tier: 1, ats: oracle, host: ibqbjb.fa.ocs.oraclecloud.com, site: Honeywell}
+  - {name: Leidos, sector: defense, ats: workday, host: leidos.wd5.myworkdayjobs.com, sites: [External]}
+  - {name: Sierra Nevada Corporation, sector: defense, ats: workday, host: snc.wd1.myworkdayjobs.com, sites: [SNC_External_Career_Site]}
+  - {name: AeroVironment, sector: defense, ats: workday, host: avav.wd1.myworkdayjobs.com, sites: [AVAV]}
+  - {name: Draper, sector: defense, tier: 1, ats: workday, host: draper.wd5.myworkdayjobs.com, sites: [Draper_Careers]}
+  - {name: Shield AI, sector: defense tech, tier: 1, ats: lever, token: shieldai}
+  - {name: Saronic, sector: defense tech, tier: 1, ats: ashby, token: saronic}
+  - {name: Epirus, sector: defense tech, ats: greenhouse, token: epirus}
+  - {name: CHAOS Industries, sector: defense tech, ats: greenhouse, token: chaosindustries}
+  - {name: Mach Industries, sector: defense tech, tier: 1, ats: greenhouse, token: machindustries}
+  - {name: Hermeus, sector: aerospace, tier: 1, ats: lever, token: hermeus}
+  - {name: JetZero, sector: aerospace, tier: 1, ats: greenhouse, token: jetzero}
+  - {name: Skydio, sector: robotics, tier: 1, ats: ashby, token: skydio}
+  - {name: Regent, sector: aerospace, ats: ashby, token: regent}
+  - {name: Electra, sector: aerospace, ats: greenhouse, token: electraaero}
+  - {name: Archer Aviation, sector: evtol, tier: 1, ats: greenhouse, token: archer56}
+  - {name: Skyryse, sector: aerospace, ats: greenhouse, token: skyryse}
+
+  # space
+  - {name: Rocket Lab, sector: space, tier: 1, ats: greenhouse, token: rocketlab}
+  - {name: Relativity Space, sector: space, tier: 1, ats: greenhouse, token: relativity}
+  - {name: Stoke Space, sector: space, tier: 1, ats: greenhouse, token: stokespacetechnologies}
+  - {name: Firefly Aerospace, sector: space, tier: 1, ats: workday, host: fireflyspace.wd115.myworkdayjobs.com, sites: [Firefly]}
+  - {name: Sierra Space, sector: space, tier: 1, ats: workday, host: sierraspace.wd1.myworkdayjobs.com, sites: [Sierra_Space_External_Career_Site]}
+  - {name: Vast, sector: space, tier: 1, ats: greenhouse, token: vast}
+  - {name: Varda Space, sector: space, tier: 1, ats: greenhouse, token: vardaspace}
+  - {name: Astranis, sector: space, tier: 1, ats: greenhouse, token: astranis}
+  - {name: K2 Space, sector: space, tier: 1, ats: greenhouse, token: k2spacecorporation}
+  - {name: True Anomaly, sector: space, ats: greenhouse, token: trueanomalyinc}
+  - {name: Apex Space, sector: space, tier: 1, ats: ashby, token: apex-technology-inc}
+  - {name: Northwood Space, sector: space, ats: ashby, token: northwoodspace}
+  - {name: Muon Space, sector: space, ats: greenhouse, token: muonspace}
+  - {name: Xona Space Systems, sector: space, ats: ashby, token: xona-space}
+  - {name: Inversion Space, sector: space, ats: greenhouse, token: inversionspace}
+  - {name: Star Catcher, sector: space, ats: greenhouse, token: star-catcher}
+  - {name: Ursa Major, sector: space, ats: greenhouse, token: ursamajor}
+  - {name: Albedo, sector: space, ats: greenhouse, token: albedo}
+  - {name: Astro Mechanica, sector: aerospace, ats: ashby, token: astro-mechanica}
+
+  # nuclear, fusion, energy
+  - {name: Kairos Power, sector: nuclear, tier: 1, ats: greenhouse, token: kairospower}
+  - {name: X-energy, sector: nuclear, tier: 1, ats: workday, host: xenergy.wd5.myworkdayjobs.com, sites: [X-energyUS]}
+  - {name: Westinghouse, sector: nuclear, ats: successfactors, host: careers.westinghousenuclear.com}
+  - {name: Oklo, sector: nuclear, ats: greenhouse, token: oklo}
+  - {name: Valar Atomics, sector: nuclear, ats: greenhouse, token: valaratomics}
+  - {name: Antares, sector: nuclear, ats: ashby, token: antares}
+  - {name: Last Energy, sector: nuclear, ats: lever, token: last-energy}
+  - {name: General Matter, sector: nuclear, ats: greenhouse, token: generalmatter}
+  - {name: Pacific Fusion, sector: fusion, tier: 1, ats: greenhouse, token: pacificfusion}
+  - {name: Commonwealth Fusion Systems, sector: fusion, tier: 1, ats: lever, token: cfsenergy}
+  - {name: Helion, sector: fusion, tier: 1, ats: ashby, token: helion}
+  - {name: Xcimer Energy, sector: fusion, ats: lever, token: xcimer}
+  - {name: Fervo Energy, sector: energy, ats: greenhouse, token: fervoenergy}
+  - {name: Antora Energy, sector: energy, ats: greenhouse, token: antora}
+  - {name: Rondo Energy, sector: energy, ats: greenhouse, token: rondoenergy}
+  - {name: Exowatt, sector: energy, ats: lever, token: exowatt}
+  - {name: Base Power, sector: energy, ats: ashby, token: base-power}
+  - {name: Heron Power, sector: energy, ats: ashby, token: heron-power}
+  - {name: Twelve, sector: energy, ats: ashby, token: twelve}
+  - {name: Chevron, sector: energy, ats: workday, host: chevron.wd5.myworkdayjobs.com, sites: [jobs]}
+  - {name: ExxonMobil, sector: energy, ats: successfactors, host: jobs.exxonmobil.com}
+
+  # batteries and materials
+  - {name: Redwood Materials, sector: batteries, tier: 1, ats: greenhouse, token: redwoodmaterials}
+  - {name: Form Energy, sector: batteries, ats: ashby, token: formenergy}
+  - {name: SES AI, sector: batteries, ats: greenhouse, token: sesai}
+  - {name: Solid Power, sector: batteries, ats: greenhouse, token: solidpower}
+  - {name: Factorial Energy, sector: batteries, ats: greenhouse, token: factorialenergy}
+  - {name: MetOx, sector: materials, ats: greenhouse, token: metoxinternationalinc}
+  - {name: Lila Sciences, sector: materials, ats: greenhouse, token: lilasciences}
+  - {name: Amca, sector: materials, ats: greenhouse, token: amca}
+
+  # automotive and mobility
+  - {name: General Motors, sector: automotive, tier: 1, ats: workday, host: generalmotors.wd5.myworkdayjobs.com, sites: [Careers_GM]}
+  - {name: Lucid Motors, sector: automotive, ats: greenhouse, token: lucidmotors}
+  - {name: Scout Motors, sector: automotive, ats: greenhouse, token: scoutmotors}
+  - {name: Harbinger, sector: automotive, ats: greenhouse, token: harbingermotors}
+  - {name: Waymo, sector: automotive, tier: 1, ats: greenhouse, token: waymo}
+  - {name: Zoox, sector: automotive, tier: 1, ats: lever, token: zoox}
+  - {name: Nuro, sector: automotive, ats: greenhouse, token: nuro}
+  - {name: Kodiak, sector: automotive, ats: greenhouse, token: kodiak}
+  - {name: Applied Intuition, sector: automotive, ats: ashby, token: applied}
+  - {name: Parallel Systems, sector: transit, ats: greenhouse, token: parallel}
+  - {name: Continental, sector: automotive, ats: smartrecruiters, token: Continental}
+  - {name: Bosch, sector: industrial, ats: smartrecruiters, token: BoschGroup}
+
+  # robotics and manufacturing tech
+  - {name: Figure, sector: robotics, tier: 1, ats: greenhouse, token: figureai}
+  - {name: Apptronik, sector: robotics, ats: greenhouse, token: apptronik}
+  - {name: Agility Robotics, sector: robotics, ats: greenhouse, token: agilityrobotics}
+  - {name: Boston Dynamics, sector: robotics, tier: 1, ats: workday, host: bostondynamics.wd1.myworkdayjobs.com, sites: [Boston_Dynamics]}
+  - {name: 1X, sector: robotics, ats: ashby, token: 1x}
+  - {name: Physical Intelligence, sector: robotics, ats: ashby, token: physicalintelligence}
+  - {name: Dyna Robotics, sector: robotics, ats: ashby, token: dyna-robotics}
+  - {name: Collaborative Robotics, sector: robotics, ats: ashby, token: cobot}
+  - {name: Standard Bots, sector: robotics, ats: ashby, token: standardbots}
+  - {name: Field AI, sector: robotics, ats: lever, token: field-ai}
+  - {name: Dexterity, sector: robotics, ats: lever, token: dexterity}
+  - {name: ANYbotics, sector: robotics, ats: lever, token: anybotics}
+  - {name: Formic, sector: robotics, ats: greenhouse, token: formic}
+  - {name: Fourier, sector: robotics, ats: ashby, token: fourier}
+  - {name: Zipline, sector: robotics, tier: 1, ats: greenhouse, token: flyzipline}
+  - {name: Hadrian, sector: manufacturing, tier: 1, ats: ashby, token: hadrian-automation}
+  - {name: Divergent, sector: manufacturing, tier: 1, ats: greenhouse, token: divergent}
+  - {name: Freeform, sector: manufacturing, ats: greenhouse, token: freeformfuturecorp}
+  - {name: Atomic Machines, sector: manufacturing, ats: greenhouse, token: atomicmachines}
+  - {name: Formlabs, sector: manufacturing, ats: greenhouse, token: formlabs}
+  - {name: Seurat, sector: manufacturing, ats: greenhouse, token: seurat}
+
+  # industrial and manufacturing
+  - {name: John Deere, sector: industrial, tier: 1, ats: successfactors, host: jobs.deere.com}
+  - {name: 3M, sector: industrial, ats: workday, host: 3m.wd1.myworkdayjobs.com, sites: [Search]}
+  - {name: Emerson, sector: industrial, ats: oracle, host: hdjq.fa.us2.oraclecloud.com, site: CX_1}
+  - {name: Eaton, sector: industrial, ats: eightfold, host: eaton.eightfold.ai, domain: eaton.com}
+  - {name: GE Appliances, sector: industrial, ats: workday, host: haier.wd3.myworkdayjobs.com, sites: [GE_Appliances]}
+  - {name: Motorola Solutions, sector: big tech, ats: workday, host: motorolasolutions.wd5.myworkdayjobs.com, sites: [Careers]}
+  - {name: Applied Materials, sector: semiconductors, tier: 1, ats: workday, host: amat.wd1.myworkdayjobs.com, sites: [External]}
+  - {name: Foth, sector: consulting, ats: lever, token: foth}
+  - {name: ms consultants, sector: consulting, ats: lever, token: msconsultants}
+
+  # medical devices
+  - {name: Medtronic, sector: medical devices, tier: 1, ats: workday, host: medtronic.wd1.myworkdayjobs.com, sites: [MedtronicCareers]}
+  - {name: Johnson & Johnson, sector: medical devices, tier: 1, ats: workday, host: jj.wd5.myworkdayjobs.com, sites: [JJ]}
+  - {name: Abbott, sector: medical devices, ats: workday, host: abbott.wd5.myworkdayjobs.com, sites: [abbottcareers]}
+  - {name: Boston Scientific, sector: medical devices, ats: successfactors, host: jobs.bostonscientific.com}
+  - {name: Intuitive Surgical, sector: medical devices, tier: 1, ats: smartrecruiters, token: Intuitive}
+  - {name: GE HealthCare, sector: medical devices, ats: workday, host: gehc.wd5.myworkdayjobs.com, sites: [GEHC_ExternalSite]}
+  - {name: Thermo Fisher, sector: medical devices, ats: workday, host: thermofisher.wd5.myworkdayjobs.com, sites: [ThermoFisherCareers]}
+  - {name: Alcon, sector: medical devices, ats: workday, host: alcon.wd5.myworkdayjobs.com, sites: [careers_alcon]}
+  - {name: Neuralink, sector: medical devices, tier: 1, ats: greenhouse, token: neuralink}
+  - {name: Capstan Medical, sector: medical devices, ats: lever, token: capstan-medical}
+
+  # big tech hardware and semiconductors
+  - {name: NVIDIA, sector: big tech, tier: 1, ats: workday, host: nvidia.wd5.myworkdayjobs.com, sites: [NVIDIAExternalCareerSite]}
+  - {name: Microsoft, sector: big tech, tier: 1, ats: eightfold, host: apply.careers.microsoft.com, domain: microsoft.com}
+  - {name: Intel, sector: semiconductors, ats: workday, host: intel.wd1.myworkdayjobs.com, sites: [External]}
+  - {name: Micron, sector: semiconductors, ats: workday, host: micron.wd1.myworkdayjobs.com, sites: [External]}
+  - {name: HP, sector: big tech, ats: workday, host: hp.wd5.myworkdayjobs.com, sites: [ExternalCareerSite]}
+  - {name: Western Digital, sector: big tech, ats: smartrecruiters, token: WesternDigital}
+  - {name: PsiQuantum, sector: big tech, ats: greenhouse, token: psiquantum}
+  - {name: Oura, sector: consumer hardware, ats: greenhouse, token: oura}
+  - {name: Peloton, sector: consumer hardware, ats: greenhouse, token: peloton}
