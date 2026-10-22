@@ -130,10 +130,15 @@ def termStatus(title, description, season="summer", year=2027):
 
 
 ## eligibility flags (flag, never hide)
+# "done with sophomore year by the start date" is fine for daniel (he finishes it may 2027), so it gets its own
+# neutral flag; only junior-or-later requirements count as a rising-junior minimum
+sophomoreDoneRe = re.compile(
+    r"complet\w*\s+(?:at least\s+)?(?:(?:his|her|their|your)\s+)?(?:the\s+)?(?:sophomore|second)[\s-]+year|"
+    r"rising\s+junior|upcoming\s+junior|entering\s+(?:their|your|the)\s+(?:junior|third)(?:\s+or\s+(?:senior|fourth))?[\s-]+year", re.I)
 risingJuniorRes = [
-    r"complet\w*\s+(?:at least\s+)?(?:(?:his|her|their|your)\s+)?(?:the\s+)?(?:junior|sophomore|second|third)[\s-]+year",
-    r"rising\s+(?:junior|senior)", r"junior\s+(?:or|/|and)\s+senior", r"junior(?:\s+or\s+senior)?\s+(?:class\s+)?standing",
-    r"(?:third|3rd)\s+(?:or|/)\s+(?:fourth|4th)[\s-]+year", r"entering\s+(?:their|your)\s+(?:junior|senior|third|fourth)\s+year",
+    r"complet\w*\s+(?:at least\s+)?(?:(?:his|her|their|your)\s+)?(?:the\s+)?(?:junior|third)[\s-]+year",
+    r"rising\s+senior", r"junior\s+(?:or|/|and)\s+senior(?!\s+year)", r"junior(?:\s+or\s+senior)?\s+(?:class\s+)?standing",
+    r"(?:third|3rd)\s+(?:or|/)\s+(?:fourth|4th)[\s-]+year", r"entering\s+(?:their|your|the)\s+(?:senior|fourth)\s+year",
     r"minimum\s+of\s+(?:junior|third[\s-]year)", r"at least (?:a )?junior",
 ]
 risingJuniorRe = re.compile("|".join(risingJuniorRes), re.I)
@@ -146,15 +151,19 @@ clearanceRe = re.compile(r"security clearance|secret clearance|\bts/sci\b|top se
 def eligibilityFlags(text):
     text = text or ""
     flags = []
-    m = risingJuniorRe.search(text)
+    m = sophomoreDoneRe.search(text)
     if m:
+        flags.append({"flag": "sophomoreDone", "evidence": snippet(text, m)})
+    m = risingJuniorRe.search(sophomoreDoneRe.sub(" " * 9, text))
+    if m:
+        m = risingJuniorRe.search(text, m.start()) or m
         flags.append({"flag": "risingJuniorMin", "evidence": snippet(text, m)})
     else:
         for cm in creditsRe.finditer(text):
             if 45 <= int(cm.group(1)) <= 120:
                 flags.append({"flag": "risingJuniorMin", "evidence": snippet(text, cm)})
                 break
-    sm = sophomoreFriendlyRe.search(risingJuniorRe.sub(" ", text))
+    sm = sophomoreFriendlyRe.search(sophomoreDoneRe.sub(" ", risingJuniorRe.sub(" ", text)))
     if sm:
         m2 = sophomoreFriendlyRe.search(text, max(0, sm.start() - 200))  # evidence from the original text
         flags.append({"flag": "sophomoreFriendly", "evidence": snippet(text, m2 or sm)})

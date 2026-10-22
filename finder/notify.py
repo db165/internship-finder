@@ -11,7 +11,7 @@ def ntfyTarget():
 
 
 def flagWords(j):
-    names = {"risingJuniorMin": "rising-junior min", "usPerson": "US person", "clearance": "clearance"}
+    names = {"risingJuniorMin": "rising-junior min", "sophomoreDone": "needs sophomore yr done", "usPerson": "US person", "clearance": "clearance"}
     return [names[f["flag"]] for f in j.get("flags", []) if f["flag"] in names]
 
 
