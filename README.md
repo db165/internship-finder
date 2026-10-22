@@ -1,13 +1,13 @@
 # Internship Finder
 
-Watches the official careers boards of 140 engineering employers (Fortune 250 companies, big aerospace, defense, automotive, industrial, energy and medical device firms, and hardware startups in space, fusion and fission, robotics, defense tech, eVTOL and batteries) for Summer 2027 mechanical, manufacturing, aerospace, materials, design, test and hardware engineering internships and co-ops. A new posting pings your phone through ntfy within about 15 to 30 minutes and lands on a dashboard you can open on your phone.
+Watches the official careers boards of 140 engineering employers (Fortune 250 companies, big aerospace, defense, automotive, industrial, energy and medical device firms, and hardware startups in space, fusion and fission, robotics, defense tech, eVTOL and batteries) for Summer 2027 mechanical, manufacturing, aerospace, materials, design, test and hardware engineering internships and co-ops. A new posting pings your phone through ntfy within about an hour and lands on a dashboard you can open on your phone.
 
 Dashboard: https://db165.github.io/internship-finder/
 
 ## How it works
 
 ```
-Raspberry Pi at home (every 15 min)
+Raspberry Pi at home (every hour)
    ├─ Greenhouse, Lever, Ashby ......... public job-board APIs
    ├─ Workday ......................... /wday/cxs/{tenant}/{site}/jobs search
    ├─ SuccessFactors .................. official career-site RSS feed
@@ -55,7 +55,7 @@ The snapshot is public at `https://raw.githubusercontent.com/db165/internship-fi
 
 ## Editing the company list
 
-Everything lives in `config.yml`. The Pi pulls changes every run, so editing on github.com is enough. Each company names its board type and the fields it needs (see the comment at the top of the list). Mark `priority: true` to check a company every run instead of every second run. The dashboard's Boards tab shows each board as ok, 0 jobs, blocked or error.
+Everything lives in `config.yml`. The Pi pulls changes every run, so editing on github.com is enough. Each company names its board type and the fields it needs (see the comment at the top of the list). Every company is checked every hour. Set `defaultEveryRuns: 2` to check non-priority companies every second run instead, and mark `priority: true` to keep a company on every run. The dashboard's Boards tab shows each board as ok, 0 jobs, blocked or error.
 
 ## Manners
 

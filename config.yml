@@ -18,9 +18,9 @@ alerts:
 
 ## crawling manners
 schedule:
-  runEveryMinutes: 15   # the pi timer
-  defaultEveryRuns: 2   # most companies are checked every 2nd run (~30 min), staggered by name
-  priorityEveryRuns: 1  # companies marked priority: true are checked every run (~15 min)
+  runEveryMinutes: 60   # the pi timer
+  defaultEveryRuns: 1   # every company is checked every run (hourly); raise to 2 to stagger
+  priorityEveryRuns: 1  # companies marked priority: true are checked every run
 http:
   perHostDelaySeconds: 1.5
   timeoutSeconds: 25
