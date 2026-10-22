@@ -59,7 +59,7 @@ Everything lives in `config.yml`. The Pi pulls changes every run, so editing on 
 
 ## Manners
 
-Official public job-board endpoints only. No LinkedIn, Handshake, Indeed or Glassdoor, and no getting around bot walls: a 403, 429 or captcha page marks that board blocked and the run moves on. At most one request per host every 1.5 seconds, 4 hosts at a time, companies staggered across runs, Workday intern facets cached for a day, and each posting's full description fetched once and cached.
+Official public job-board endpoints only. No LinkedIn, Handshake, Indeed or Glassdoor, and no getting around bot walls: a 403, 429 or captcha page marks that board blocked and the run moves on. One board at a time (a Pi 3 froze when it parsed several big boards at once), at most one request per host every 1.5 seconds, a 700 MB memory cap, companies staggered across runs, Workday intern facets cached for a day, and each posting's full description fetched once and cached.
 
 ## Coverage
 
