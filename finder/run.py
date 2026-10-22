@@ -136,15 +136,18 @@ def runCycle(cfg, state, http, log=print, forceAll=False, only=None, quiet=False
                 rec["closedAt"] = iso(t)
 
     # descriptions: fetched once per new posting that already looks right by title
+    termArgs = {"season": cfg["search"]["term"]["season"], "year": cfg["search"]["term"]["year"]}
     for rec in state["jobs"].values():
         c = byName.get(rec["company"])
         if not c or rec.get("closedAt"):
             continue
         detailFn = ats.adapters[c["ats"]][1]
-        if detailFn and not rec.get("description") and not rec.get("detailFailed") and filters.disciplineOk(rec["title"]):
-            if detailBudget <= 0:
-                rec["detailPending"] = True
-                continue
+        strict = c.get("sector") in ("big tech", "semiconductors")
+        worthDetail = (filters.disciplineOk(rec["title"], strict) and filters.usLocationOk(rec.get("location"))
+                       and filters.termStatus(rec["title"], None, **termArgs) != "other")
+        if detailFn and not rec.get("description") and not rec.get("detailFailed") and worthDetail and detailBudget <= 0:
+            rec["detailPending"] = True
+        elif detailFn and not rec.get("description") and not rec.get("detailFailed") and worthDetail:
             detailBudget -= 1
             try:
                 rec["description"] = (detailFn(c, rec, http) or "")[:8000] or " "

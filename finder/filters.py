@@ -30,15 +30,64 @@ excludeRe = re.compile(
     r"program manag|project coordinat|project manag|product manag|strategy|analyst intern|"
     r"clinical|regulatory|medical affairs|biolog|chemist|pharma|nurse|"
     r"technician|machinist|mechanic intern|apprentice", re.I)
-# a mechanical word anywhere in the title beats an exclusion (e.g. "mechanical and electrical engineering intern")
-mechTitleRe = re.compile(r"mechanic|manufactur|aerospace|materials|propulsion|structur|thermal|hardware|robotic|nuclear|test eng", re.I)
+# a mechanical word anywhere in the title beats a soft exclusion (e.g. "mechanical and electrical engineering intern")
+mechTitleRe = re.compile(r"mechanic|manufactur|aerospace|materials|propulsion|structur|thermal|hardware|nuclear|test eng", re.I)
+# these only get rescued by the word "mechanical" itself
+hardExcludeRe = re.compile(
+    r"software|firmware|supply chain|sourcing|material planning|material requirements|program manag|"
+    r"data cent|site reliability|\bsre\b|algorithm|error correction|reinforcement learning|computer vision|"
+    r"deep learning|foundation model|embodied ai|autonomy eng|network|platform|infrastructure|\bgpu\b|\bhpc\b|"
+    r"electrical|electronics?\b|wireless|\brf\b|circuit|\beda\b|fpga|asic|"
+    r"civil|coastal|waterfront|water eng|chemical eng|forward deployed|operations eng|engineering operations|"
+    r"sales|marketing|finance|licensing|storage|performance eng", re.I)
+gradOnlyRe = re.compile(r"(?<!under)graduate\b(?! *(?:\w+ +)?(?:program|rotation))|\bph\.?d\b|master'?s\b|\bmba\b", re.I)
+undergradRe = re.compile(r"undergrad|bachelor|bs/ms|\bbs\b", re.I)
 
 
-def disciplineOk(title):
+def disciplineOk(title, strict=False):
     t = title or ""
+    if hardExcludeRe.search(t) and not re.search(r"mechanic", t, re.I):
+        return False
     if excludeRe.search(t) and not mechTitleRe.search(t):
         return False
+    if gradOnlyRe.search(t) and not undergradRe.search(t):
+        return False  # graduate, phd and master's-only internships
+    if strict:
+        return bool(wantRe.search(t))  # big tech: "engineering intern" alone is usually software
     return bool(wantRe.search(t) or genericEngRe.search(t))
+
+
+## location: us only (a posting with any us location counts)
+foreignRe = re.compile(
+    r"\b(?:canada|ontario|toronto|markham|mississauga|vancouver|montreal|quebec|mexico|brazil|argentina|chile|colombia|"
+    r"uk|united kingdom|england|scotland|ireland|dublin|germany|deutschland|berlin|munich|ehningen|france|paris|spain|"
+    r"barcelona|madrid|italy|milan|netherlands|rotterdam|belgium|antwerp\w*|luxembourg|switzerland|zurich|sweden|"
+    r"poland|czech|austria|denmark|norway|finland|portugal|israel|india|bangalore|bengaluru|hyderabad|pune|chennai|china|"
+    r"shanghai|beijing|shenzhen|hong kong|taiwan|taipei|japan|tokyo|korea|seoul|singapore|malaysia|kuala lumpur|penang|"
+    r"vietnam|hanoi|ho chi minh|thailand|philippines|indonesia|australia|sydney|melbourne|new zealand|south africa|"
+    r"cape town|uae|dubai|abu dhabi|saudi|riyadh|qatar|egypt|turkey|"
+    r"can|mex|gbr|irl|deu|fra|esp|ita|nld|bel|lux|che|swe|pol|ind|chn|twn|jpn|kor|sgp|mys|vnm|tha|phl|aus|zaf|are|sau|isr)\b"
+    r"|, (?:fr|es|it|nl|be|sg|my|cn|jp|kr|gb|ie|ch|se|pl|au|br|mx)(?:,|$)|\bl'hospitalet\b", re.I)
+
+
+usStates = ("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR "
+            "PA RI SC SD TN TX UT VT VA WA WV WI WY DC")
+# "Paris, TX" or "Berlin, NH" are american even though the city name isn't
+usRe = re.compile(r"united states|\busa\b|, us\b|, (?:" + "|".join(usStates.split()) + r")\b(?!,? *(?:ca|canada)\b)")
+
+
+usStrongRe = re.compile(r"united states|\busa\b|, us\b", re.I)
+# names that win over a state-looking suffix ("markham, ca" is canada, "ehningen, de" is germany)
+canadaRe = re.compile(r"\b(?:ehningen|b[oö]blingen|bangalore|bengaluru|hyderabad|canada|toronto|markham|mississauga|ottawa|waterloo, on|vancouver|montreal|quebec|calgary|"
+                      r"edmonton|winnipeg|halifax)\b|, (?:on|bc|qc|ab|mb|ns), ca\b", re.I)
+
+
+def usLocationOk(location):
+    loc = (location or "").strip()
+    if not loc:
+        return True
+    parts = [p for p in re.split(r"\s*(?:/|;|\||\n)\s*", loc) if p]
+    return any(usStrongRe.search(p) or (not canadaRe.search(p) and (usRe.search(p) or not foreignRe.search(p))) for p in parts)
 
 
 ## term: summer 2027 internships and co-ops
@@ -64,6 +113,9 @@ def termStatus(title, description, season="summer", year=2027):
     titleTerms = termsIn(title)
     if titleTerms:
         return "match" if target in titleTerms else "other"
+    bareSeasons = set(re.findall(r"\b(spring|summer|fall|autumn|winter)\b", title or "", re.I))
+    if bareSeasons and season not in {b.lower() for b in bareSeasons}:
+        return "other"  # e.g. "Spring CoOp - Mechanical Engineering"
     titleYears = {int(y) for y in yearRe.findall(title or "")}
     if titleYears and year not in titleYears:
         return "other"
@@ -85,8 +137,8 @@ risingJuniorRes = [
     r"minimum\s+of\s+(?:junior|third[\s-]year)", r"at least (?:a )?junior",
 ]
 risingJuniorRe = re.compile("|".join(risingJuniorRes), re.I)
-creditsRe = re.compile(r"(\d{2,3})\s*\+?\s*(?:or more\s+)?(?:college\s+|semester\s+|academic\s+)?(?:credit\s+)?(?:hours|credits|credit hours)", re.I)
-sophomoreFriendlyRe = re.compile(r"\bsophomores?\b|\bfreshm[ae]n\b|first[\s-]year|second[\s-]year students?|rising sophomore", re.I)
+creditsRe = re.compile(r"(\d{2,3})\s*\+?\s*(?:or more\s+)?(?:college\s+|semester\s+|academic\s+)?(?:credit[\s-]+hours|credits|units)", re.I)
+sophomoreFriendlyRe = re.compile(r"\bsophomores?\b|\bfreshm[ae]n\b|first[\s-]year (?:student|undergrad)|second[\s-]year (?:student|undergrad)|rising sophomore|sophomore standing", re.I)
 usPersonRe = re.compile(r"u\.?\s?s\.?\s+person|us person|u\.?s\.?\s+citizen|united states citizen|citizenship (?:is )?required|\bitar\b|export control", re.I)
 clearanceRe = re.compile(r"security clearance|secret clearance|\bts/sci\b|top secret|obtain (?:and maintain )?a? ?(?:dod |doe )?clearance|\bq clearance\b", re.I)
 
@@ -102,8 +154,10 @@ def eligibilityFlags(text):
             if 45 <= int(cm.group(1)) <= 120:
                 flags.append({"flag": "risingJuniorMin", "evidence": snippet(text, cm)})
                 break
-    if sophomoreFriendlyRe.search(text):
-        flags.append({"flag": "sophomoreFriendly", "evidence": snippet(text, sophomoreFriendlyRe.search(text))})
+    sm = sophomoreFriendlyRe.search(risingJuniorRe.sub(" ", text))
+    if sm:
+        m2 = sophomoreFriendlyRe.search(text, max(0, sm.start() - 200))  # evidence from the original text
+        flags.append({"flag": "sophomoreFriendly", "evidence": snippet(text, m2 or sm)})
     m = usPersonRe.search(text)
     if m:
         flags.append({"flag": "usPerson", "evidence": snippet(text, m)})
@@ -160,4 +214,6 @@ def evaluate(j, company, cfg):
     j["term"] = termStatus(j["title"], j.get("description"), term["season"], term["year"])
     j["flags"] = eligibilityFlags(j.get("description"))
     j["score"], j["why"] = score(j, company, cfg["search"].get("bigCities", []))
-    return isInternTitle(j["title"]) and disciplineOk(j["title"]) and j["term"] != "other"
+    strict = company.get("sector") in ("big tech", "semiconductors")
+    return (isInternTitle(j["title"]) and disciplineOk(j["title"], strict) and j["term"] != "other"
+            and usLocationOk(j.get("location")))
