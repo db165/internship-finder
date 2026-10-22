@@ -50,10 +50,13 @@ def test_term(title, desc, expect):
 
 @pytest.mark.parametrize("text,flag", [
     ("Must have completed junior year by the start date", "risingJuniorMin"),
-    ("Students must have completed their sophomore year by the start of the internship.", "risingJuniorMin"),
+    ("Students must have completed their sophomore year by the start of the internship.", "sophomoreDone"),
+    ("Must have completed third year of study", "risingJuniorMin"),
     ("Minimum of 60 credit hours completed", "risingJuniorMin"),
     ("Junior or senior standing in Mechanical Engineering", "risingJuniorMin"),
-    ("Open to rising juniors and seniors", "risingJuniorMin"),
+    ("Open to rising juniors and seniors", "sophomoreDone"),
+    ("Entering the junior or senior year of study", "sophomoreDone"),
+    ("Rising seniors only", "risingJuniorMin"),
     ("Current 3rd or 4th year undergraduate", "risingJuniorMin"),
     ("Must be a U.S. Person as defined by ITAR", "usPerson"),
     ("U.S. citizenship is required", "usPerson"),
@@ -139,5 +142,5 @@ def test_flag_false_positives():
     assert f.eligibilityFlags("40-50 hours per week with set hourly salary") == []
     assert f.eligibilityFlags("expectations comparable to those of a first-year engineer") == []
     flags = {x["flag"] for x in f.eligibilityFlags("At minimum completed Sophomore year of college by the internship")}
-    assert flags == {"risingJuniorMin"}
+    assert flags == {"sophomoreDone"}
     assert "sophomoreFriendly" in {x["flag"] for x in f.eligibilityFlags("must have obtained sophomore standing")}
