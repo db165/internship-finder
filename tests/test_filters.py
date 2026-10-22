@@ -18,7 +18,7 @@ cfg = {"search": {"term": {"season": "summer", "year": 2027}, "bigCities": ["hou
     ("Software Engineering Intern", False),
     ("Firmware Intern", False),
     ("Electrical Engineering Intern", False),
-    ("Systems Integration/Electrical Test Engineer-INTERN", True),  # test engineering beats the electrical exclusion
+    ("Systems Integration/Electrical Test Engineer-INTERN", False),  # electrical test is ee work
     ("Civil Engineering Internship Summer 2027", False),
     ("Summer 2027 Supply Chain Internship", False),
     ("Operations Management Intern", False),
@@ -99,3 +99,45 @@ def test_notable_company_outside_big_city_still_ranks():
     j = {"title": "Propulsion Engineering Intern - Summer 2027", "location": "McGregor, TX", "description": ""}
     f.evaluate(j, {"tier": 1}, cfg)
     assert j["score"] >= 70
+
+
+## fixes from the first real run (oct 22)
+@pytest.mark.parametrize("title,strict,ok", [
+    ("Software Development Engineer Intern, ROBOTICS - 2027", False, False),
+    ("Flight Software Engineering Intern (Simulation/Hardware-In-The-Loop)", False, False),
+    ("Summer 2027 Test Engineering Internship - Graduate", False, False),
+    ("Summer 2027 Test Engineering Internship - Undergraduate", False, True),
+    ("Robotics Research, Humanoid Manipulation Intern (Summer 2027) | PhD", False, False),
+    ("Hardware Sourcing Intern", False, False),
+    ("Wireless Hardware Engineer Intern - Summer 2027", False, False),
+    ("Data Center Engineering Operations - 2027 Internship", False, False),
+    ("Civil Engineering Intern-Coastal Infrastructure (Summer 2027)", False, False),
+    ("Mechanical Engineering Co-op", False, True),
+    ("Performance Engineering Intern - Poughkeepsie", True, False),
+    ("Hardware Developer Engineer Intern (Mechanical) 2027", True, True),
+])
+def test_title_fixes(title, strict, ok):
+    assert (f.isInternTitle(title) and f.disciplineOk(title, strict)) == ok
+
+
+@pytest.mark.parametrize("loc,ok", [
+    ("Los Angeles, CA", True), ("Milpitas, CA", True), ("Paris, TX", True), ("Ontario, CA", True),
+    ("Cape Canaveral, FL, US, 32925", True), ("Seattle, WA / Toronto, Ontario", True), ("Multiple Cities", True), ("", True),
+    ("Markham, CA", False), ("Mississauga, ON, CA", False), ("Hanoi, VNM", False), ("Singapore, SG, 627596", False),
+    ("Rotterdam, ZH, NL, 3197 KA", False), ("Mansfield, England, GBR", False), ("Ehningen, DE", False),
+])
+def test_us_locations(loc, ok):
+    assert f.usLocationOk(loc) == ok
+
+
+def test_bare_season_in_title():
+    assert f.termStatus("Spring CoOp - Mechanical Engineering", "") == "other"
+    assert f.termStatus("Summer Intern - Mechanical Engineering", "") == "unspecified"
+
+
+def test_flag_false_positives():
+    assert f.eligibilityFlags("40-50 hours per week with set hourly salary") == []
+    assert f.eligibilityFlags("expectations comparable to those of a first-year engineer") == []
+    flags = {x["flag"] for x in f.eligibilityFlags("At minimum completed Sophomore year of college by the internship")}
+    assert flags == {"risingJuniorMin"}
+    assert "sophomoreFriendly" in {x["flag"] for x in f.eligibilityFlags("must have obtained sophomore standing")}

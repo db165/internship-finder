@@ -100,3 +100,27 @@ def test_rising_junior_flag_in_alert_text():
     j = {"company": "ULA", "title": "Weld Engineering Internship", "score": 40, "url": "u", "location": "Decatur, AL",
          "flags": [{"flag": "risingJuniorMin"}, {"flag": "usPerson"}], "term": "match"}
     assert "rising-junior min" in notify.single(j)["body"] and "US person" in notify.single(j)["body"]
+
+
+def test_titles_are_matched_even_while_descriptions_wait():
+    calls = []
+
+    def detail(c, j, http):
+        calls.append(j["id"])
+        return "Open to sophomores."
+    ats.adapters["fakeslow"] = (fakeList, detail)
+    c2 = dict(cfg, http={"workers": 1, "maxDetailFetchesPerRun": 1},
+              companies=[{"name": "Big Co", "ats": "fakeslow", "token": "b", "tier": 1}])
+    state = fresh()
+    board[:] = [posting(1, "Mechanical Engineering Intern - Summer 2027"), posting(2, "Propulsion Intern - Summer 2027"),
+                posting(3, "Mechanical Engineering Intern - Summer 2026")]
+    run.runCycle(c2, state, http=None)
+    recs = state["jobs"]
+    assert recs["fakeslow:b:1"]["match"] and recs["fakeslow:b:2"]["match"]  # both visible on the dashboard
+    assert recs["fakeslow:b:2"]["detailPending"] and len(calls) == 1
+    assert "3" not in calls  # wrong term by title, never fetched
+    board.append(posting(4, "Structures Intern - Summer 2027"))
+    out = run.runCycle(c2, state, http=None)
+    assert out["newMatches"] == []  # new id but its description hasn't arrived, so no alert yet
+    out = run.runCycle(c2, state, http=None)
+    assert [j["key"] for j in out["newMatches"]] == ["fakeslow:b:4"]
