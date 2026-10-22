@@ -25,7 +25,7 @@ http:
   perHostDelaySeconds: 1.5
   timeoutSeconds: 25
   workers: 1           # a pi 3 can't parse several big boards at once without swapping
-  maxDetailFetchesPerRun: 40   # full descriptions are fetched once per new posting, then cached
+  maxDetailFetchesPerRun: 150   # full descriptions are fetched once per new posting, then cached
 workday:
   maxPages: 8             # 20 postings per page
   keywordPages: 2         # extra keyword pass in case a posting isn't tagged as an intern
