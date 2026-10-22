@@ -99,8 +99,11 @@ def runCycle(cfg, state, http, log=print, forceAll=False, only=None, quiet=False
     results = {}
     with ThreadPoolExecutor(max_workers=int(cfg.get("http", {}).get("workers", 4))) as pool:
         futures = {pool.submit(crawlOne, c, http, cfg, facetCache): c for c in due}
-        for fut, c in futures.items():
-            results[c["name"]] = fut.result()
+        for i, (fut, c) in enumerate(futures.items(), 1):
+            r = fut.result()
+            results[c["name"]] = r
+            n = len(r["jobs"]) if r["jobs"] is not None else "-"
+            log(f"  [{i}/{len(due)}] {c['name']}: {r['status']} ({n} intern titles)")
     state["wdFacets"] = {k: dict(v, date=v.get("date") or iso(t)) for k, v in facetCache.items()}
 
     detailBudget = int(cfg.get("http", {}).get("maxDetailFetchesPerRun", 80))
@@ -228,6 +231,19 @@ def main(argv=None):
     ap.add_argument("--quiet", action="store_true", help="record without sending alerts")
     ap.add_argument("--table", action="store_true", help="print the per-company status table")
     a = ap.parse_args(argv)
+
+    # pi 3 safety: print progress as it happens, and fail with MemoryError instead of
+    # pushing the whole pi into swap (that froze it on the first run)
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except AttributeError:
+        pass
+    try:
+        import resource
+        capMb = int(os.environ.get("FINDER_MEMORY_MB", "700"))
+        resource.setrlimit(resource.RLIMIT_AS, (capMb * 1024 * 1024, capMb * 1024 * 1024))
+    except (ImportError, ValueError, OSError):
+        pass
 
     with open(a.config) as f:
         cfg = yaml.safe_load(f)

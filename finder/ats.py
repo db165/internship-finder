@@ -65,8 +65,14 @@ def greenhouseDetail(c, j, http):
 
 ## lever
 def leverList(c, http, keep, cache):
-    data = http.getJson(f"https://api.lever.co/v0/postings/{c['token']}?mode=json")
-    return leverParse(data, keep)
+    # paged so a big board (shield ai has 600+) never sits in memory all at once
+    out = []
+    for page in range(c.get("pages", 20)):
+        data = http.getJson(f"https://api.lever.co/v0/postings/{c['token']}?mode=json&limit=50&skip={page * 50}")
+        out += leverParse(data, keep)
+        if len(data or []) < 50:
+            break
+    return out
 
 
 def leverParse(data, keep):
