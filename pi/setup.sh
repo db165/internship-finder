@@ -70,7 +70,7 @@ until keyWorks; do
 done
 echo "GitHub accepted the key."
 
-echo "== 5/6 scheduling a run every 15 minutes (separate from the car finder)"
+echo "== 5/6 scheduling a run every hour (separate from the car finder)"
 sudo tee /etc/systemd/system/internships.service > /dev/null <<EOU
 [Unit]
 Description=internship finder crawler
@@ -87,11 +87,11 @@ MemoryMax=350M
 EOU
 sudo tee /etc/systemd/system/internships.timer > /dev/null <<EOU
 [Unit]
-Description=run the internship finder every 15 minutes
+Description=run the internship finder every hour
 
 [Timer]
 OnBootSec=5min
-OnUnitActiveSec=15min
+OnUnitActiveSec=60min
 Persistent=true
 
 [Install]
