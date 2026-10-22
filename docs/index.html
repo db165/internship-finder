@@ -157,6 +157,7 @@ function card(j) {
   const badges = [];
   if (isToday(j.firstSeen)) badges.push(`<span class="b new">NEW</span>`);
   if (f.has("risingJuniorMin")) badges.push(`<button class="b jr" data-ev="${esc(ev.risingJuniorMin)}">Rising-junior min</button>`);
+  if (f.has("sophomoreDone")) badges.push(`<button class="b soph" data-ev="${esc(ev.sophomoreDone)}">Sophomore year done by start</button>`);
   if (f.has("sophomoreFriendly")) badges.push(`<button class="b soph" data-ev="${esc(ev.sophomoreFriendly)}">Mentions sophomores</button>`);
   if (f.has("usPerson")) badges.push(`<button class="b us" data-ev="${esc(ev.usPerson)}">US person</button>`);
   if (f.has("clearance")) badges.push(`<button class="b clr" data-ev="${esc(ev.clearance)}">Clearance</button>`);
