@@ -144,3 +144,29 @@ def test_flag_false_positives():
     flags = {x["flag"] for x in f.eligibilityFlags("At minimum completed Sophomore year of college by the internship")}
     assert flags == {"sophomoreDone"}
     assert "sophomoreFriendly" in {x["flag"] for x in f.eligibilityFlags("must have obtained sophomore standing")}
+
+
+## fixes from the overnight runs (oct 22)
+@pytest.mark.parametrize("title,strict,ok", [
+    ("Research Intern - Agentic Data Memory", True, False),
+    ("Research Intern - Brain-Computer Interfaces", True, False),
+    ("NVIDIA 2027 Internships: Hardware Physical Design / VLSI", True, False),
+    ("Intern - Design Engineer, HBM", True, False),
+    ("Mechanical Engineer Intern - Thermal", True, True),
+    ("Summer 2027 Internship - Information Security Engineer", False, False),
+    ("Military DoD SkillBridge Internship - Structure Parts Operations Supervisor", False, False),
+    ("Test Engineer Intern - Summer 2027 (For SNC Summer 2026 Interns Only)", False, False),
+    ("Manufacturing Engineering Intern – US – Summer 2027 - Returning Students", False, False),
+    ("Presale Systems Engineer - Summer 2027 Internship", False, False),
+    ("Structures Engineering Internship - Summer 2027", False, True),
+])
+def test_overnight_title_fixes(title, strict, ok):
+    assert (f.isInternTitle(title) and f.disciplineOk(title, strict)) == ok
+
+
+def test_overnight_location_and_term_fixes():
+    assert not f.usLocationOk("Fab 10N/X, Singapore")
+    assert not f.usLocationOk("Auckland, NZ")
+    assert f.usLocationOk("Long Beach, CA / Auckland, NZ")
+    assert f.termStatus("Test Engineering Co-op (Jan27-May27)", "") == "other"
+    assert f.termStatus("Engineering Co-op (Jan- Aug) 27", "") == "unspecified"
