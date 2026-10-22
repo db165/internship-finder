@@ -39,7 +39,11 @@ hardExcludeRe = re.compile(
     r"deep learning|foundation model|embodied ai|autonomy eng|network|platform|infrastructure|\bgpu\b|\bhpc\b|"
     r"electrical|electronics?\b|wireless|\brf\b|circuit|\beda\b|fpga|asic|"
     r"civil|coastal|waterfront|water eng|chemical eng|forward deployed|operations eng|engineering operations|"
-    r"sales|marketing|finance|licensing|storage|performance eng", re.I)
+    r"sales|marketing|finance|licensing|storage|performance eng|security|vlsi|physical design|\bdft\b|verification|"
+    r"presale|pre-sales|skillbridge|supervisor|returning|interns only|return intern", re.I)
+# big tech and chip companies post lots of software/ee "research" and "design" interns, so they need a clearly mechanical word
+strictWantRe = re.compile(r"mechanic|manufactur|aerospace|materials?\b|hardware|thermal|mechatronic|robotic|prototyp|"
+                          r"packaging|process eng|test eng|reliability eng|product design|additive|\bcad\b", re.I)
 gradOnlyRe = re.compile(r"(?<!under)graduate\b(?! *(?:\w+ +)?(?:program|rotation))|\bph\.?d\b|master'?s\b|\bmba\b", re.I)
 undergradRe = re.compile(r"undergrad|bachelor|bs/ms|\bbs\b", re.I)
 
@@ -53,7 +57,7 @@ def disciplineOk(title, strict=False):
     if gradOnlyRe.search(t) and not undergradRe.search(t):
         return False  # graduate, phd and master's-only internships
     if strict:
-        return bool(wantRe.search(t))  # big tech: "engineering intern" alone is usually software
+        return bool(strictWantRe.search(t))  # big tech: "engineering intern" alone is usually software
     return bool(wantRe.search(t) or genericEngRe.search(t))
 
 
@@ -65,9 +69,9 @@ foreignRe = re.compile(
     r"poland|czech|austria|denmark|norway|finland|portugal|israel|india|bangalore|bengaluru|hyderabad|pune|chennai|china|"
     r"shanghai|beijing|shenzhen|hong kong|taiwan|taipei|japan|tokyo|korea|seoul|singapore|malaysia|kuala lumpur|penang|"
     r"vietnam|hanoi|ho chi minh|thailand|philippines|indonesia|australia|sydney|melbourne|new zealand|south africa|"
-    r"cape town|uae|dubai|abu dhabi|saudi|riyadh|qatar|egypt|turkey|"
+    r"cape town|uae|dubai|abu dhabi|saudi|riyadh|qatar|egypt|turkey|auckland|wellington|christchurch|"
     r"can|mex|gbr|irl|deu|fra|esp|ita|nld|bel|lux|che|swe|pol|ind|chn|twn|jpn|kor|sgp|mys|vnm|tha|phl|aus|zaf|are|sau|isr)\b"
-    r"|, (?:fr|es|it|nl|be|sg|my|cn|jp|kr|gb|ie|ch|se|pl|au|br|mx)(?:,|$)|\bl'hospitalet\b", re.I)
+    r"|, (?:fr|es|it|nl|be|sg|my|cn|jp|kr|gb|ie|ch|se|pl|au|br|mx|nz)(?:,|$)|\bl'hospitalet\b", re.I)
 
 
 usStates = ("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR "
@@ -86,7 +90,7 @@ def usLocationOk(location):
     loc = (location or "").strip()
     if not loc:
         return True
-    parts = [p for p in re.split(r"\s*(?:/|;|\||\n)\s*", loc) if p]
+    parts = [p for p in re.split(r"\s+/\s+|\s*(?:;|\||\n)\s*", loc) if p]  # "fab 10n/x, singapore" is one place
     return any(usStrongRe.search(p) or (not canadaRe.search(p) and (usRe.search(p) or not foreignRe.search(p))) for p in parts)
 
 
@@ -116,6 +120,10 @@ def termStatus(title, description, season="summer", year=2027):
     bareSeasons = set(re.findall(r"\b(spring|summer|fall|autumn|winter)\b", title or "", re.I))
     if bareSeasons and season not in {b.lower() for b in bareSeasons}:
         return "other"  # e.g. "Spring CoOp - Mechanical Engineering"
+    months = re.findall(r"\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|"
+                        r"oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?![a-z])", title or "", re.I)
+    if months and not {m[:3].lower() for m in months} & {"jun", "jul", "aug"}:
+        return "other"  # e.g. "Test Engineering Co-op (Jan27-May27)"
     titleYears = {int(y) for y in yearRe.findall(title or "")}
     if titleYears and year not in titleYears:
         return "other"
